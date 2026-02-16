@@ -111,40 +111,39 @@ export default function ReservationsPage() {
                  <div>
                     <label className="block text-sm text-stone-200 mb-1">Guests</label>
                     <div className="relative">
-                        <input type="number" {...register('guests')} className="w-full bg-white/5 border border-white/30 rounded-lg p-3 text-white focus:border-saffron pl-10" min="1" />
+                        <input type="number" {...register('guests')} className="w-full bg-white/5 border border-white/30 rounded-lg p-3 text-white focus:border-saffron-500 pl-10" min="1" />
                         <Users className="absolute left-3 top-3.5 text-stone-300" size={18} />
                     </div>
                     {errors.guests && <p className="text-red-400 text-xs mt-1">{errors.guests.message}</p>}
                  </div>
                  <div>
                     <label className="block text-sm text-stone-200 mb-1">Phone</label>
-                    <input {...register('phone')} className="w-full bg-white/5 border border-white/30 rounded-lg p-3 text-white focus:border-saffron" placeholder="+44..." />
+                    <input {...register('phone')} className="w-full bg-white/5 border border-white/30 rounded-lg p-3 text-white focus:border-saffron-500" placeholder="+44..." />
                     {errors.phone && <p className="text-red-400 text-xs mt-1">{errors.phone.message}</p>}
                  </div>
             </div>
 
             <div>
                 <label className="block text-sm text-stone-200 mb-1">Name</label>
-                <input {...register('name')} className="w-full bg-white/5 border border-white/30 rounded-lg p-3 text-white focus:border-saffron" placeholder="Your Name" />
+                <input {...register('name')} className="w-full bg-white/5 border border-white/30 rounded-lg p-3 text-white focus:border-saffron-500" placeholder="Your Name" />
                 {errors.name && <p className="text-red-400 text-xs mt-1">{errors.name.message}</p>}
             </div>
 
             <div>
                 <label className="block text-sm text-stone-200 mb-1">Email</label>
-                <input {...register('email')} className="w-full bg-white/5 border border-white/30 rounded-lg p-3 text-white focus:border-saffron" placeholder="email@example.com" />
+                <input {...register('email')} className="w-full bg-white/5 border border-white/30 rounded-lg p-3 text-white focus:border-saffron-500" placeholder="email@example.com" />
                 {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email.message}</p>}
             </div>
 
             <div>
                 <label className="block text-sm text-stone-200 mb-1">Special Requests</label>
-                <textarea {...register('notes')} className="w-full bg-white/5 border border-white/30 rounded-lg p-3 text-white focus:border-saffron h-24" placeholder="Birthday, Anniversary, etc." />
+                <textarea {...register('notes')} className="w-full bg-white/5 border border-white/30 rounded-lg p-3 text-white focus:border-saffron-500 h-24" placeholder="Birthday, Anniversary, etc." />
             </div>
 
             <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-4 bg-saffron text-white font-bold rounded-lg hover:bg-opacity-90 transition-all"
-                style={{ backgroundColor: '#FF9933' }}
+                className="w-full py-4 bg-saffron-500 text-white font-bold rounded-lg hover:bg-opacity-90 transition-all"
             >
                 {isSubmitting ? <Loader2 className="animate-spin mx-auto" /> : 'Confirm Booking'}
             </button>
