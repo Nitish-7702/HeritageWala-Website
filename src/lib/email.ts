@@ -1,13 +1,44 @@
+import { Resend } from 'resend'
+import { env } from './env'
+import { logger } from './logger'
+
+const resend = env.RESEND_API_KEY ? new Resend(env.RESEND_API_KEY) : null
+
 export async function sendEmail(to: string, subject: string, body: string) {
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 500))
-  
-  console.log('📧 [MOCK EMAIL SERVICE] --------------------------------')
-  console.log(`To: ${to}`)
-  console.log(`Subject: ${subject}`)
-  console.log(`Body:\n${body}`)
-  console.log('--------------------------------------------------------')
-  return true
+  if (!resend) {
+    logger.warn('Email not sent, RESEND_API_KEY is not configured', { to, subject })
+    return false
+  }
+
+  const maxAttempts = 3
+  let attempt = 0
+
+  while (attempt < maxAttempts) {
+    attempt += 1
+    try {
+      const result = await resend.emails.send({
+        from: 'Heritage Wala <no-reply@heritagewala.com>',
+        to,
+        subject,
+        text: body,
+      })
+
+      if (result.error) {
+        throw result.error
+      }
+
+      logger.info('Email sent', { to, subject, attempt })
+      return true
+    } catch (error) {
+      logger.error('Failed to send email', { to, subject, attempt, error })
+      if (attempt >= maxAttempts) {
+        return false
+      }
+      await new Promise((resolve) => setTimeout(resolve, 500 * attempt))
+    }
+  }
+
+  return false
 }
 
 export async function sendOrderConfirmation(order: any, items: any[]) {
