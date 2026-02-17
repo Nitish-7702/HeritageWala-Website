@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { z, ZodError } from 'zod'
 import { sendOrderConfirmation } from '@/lib/email'
+import { logger } from '@/lib/logger'
 
 export async function GET() {
   try {
@@ -20,7 +21,7 @@ export async function GET() {
 
     return NextResponse.json(orders)
   } catch (error) {
-    console.error('Error fetching orders:', error)
+    logger.error('Error fetching orders', { error })
     return NextResponse.json(
       { error: 'Failed to fetch orders' },
       { status: 500 }
@@ -44,12 +45,13 @@ export async function PUT(request: Request) {
       include: { items: true },
     })
 
-    // Send status update email
-    sendOrderConfirmation(order, order.items).catch(console.error)
+    sendOrderConfirmation(order, order.items).catch((error) => {
+      logger.error('Order status email failed', { error, orderId: order.id })
+    })
 
     return NextResponse.json(order)
   } catch (error) {
-    console.error('Error updating order:', error)
+    logger.error('Error updating order', { error })
     if (error instanceof ZodError) {
       return NextResponse.json(
         { error: 'Invalid input', details: error.issues },

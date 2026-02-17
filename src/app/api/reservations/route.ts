@@ -1,49 +1,89 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { sendReservationConfirmation } from '@/lib/email'
+import { logger } from '@/lib/logger'
+import { checkRateLimit } from '@/lib/ratelimit'
+import { validateCsrf } from '@/lib/csrf'
+import { sanitizeInput } from '@/lib/sanitize'
 
 const reservationSchema = z.object({
   name: z.string().min(1),
   phone: z.string().min(10),
   email: z.string().email(),
   guests: z.number().min(1),
-  date: z.string(), // ISO string
+  date: z.string(),
   time: z.string(),
   notes: z.string().optional(),
 })
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
+  const rateLimited = await checkRateLimit(req, 'reservations', {
+    limit: 3,
+    window: 60_000,
+  })
+  if (rateLimited) return rateLimited
+
+  const csrfInvalid = validateCsrf(req)
+  if (csrfInvalid) return csrfInvalid
+
   try {
     const body = await req.json()
     const validated = reservationSchema.parse(body)
+    const sanitized = sanitizeInput(validated)
 
-    // Basic conflict check (mock logic: if > 5 reservations at same time)
-    // In real app, check capacity.
-    const count = await prisma.reservation.count({
-        where: {
-            date: new Date(validated.date),
-            time: validated.time
-        }
+    const settings =
+      (await prisma.settings.findFirst()) ?? {
+        maxGuestsPerSlot: 40,
+        maxGuestsPerReservation: 10,
+      }
+
+    if (sanitized.guests > settings.maxGuestsPerReservation) {
+      return NextResponse.json(
+        { error: 'Too many guests for a single reservation' },
+        { status: 400 }
+      )
+    }
+
+    const aggregate = await prisma.reservation.aggregate({
+      _sum: { guests: true },
+      where: {
+        date: new Date(sanitized.date),
+        time: sanitized.time,
+        status: { in: ['PENDING', 'CONFIRMED'] },
+      },
     })
 
-    if (count > 5) {
-        return NextResponse.json({ error: 'Slot full' }, { status: 400 })
+    const currentGuests = aggregate._sum.guests ?? 0
+
+    if (currentGuests + sanitized.guests > settings.maxGuestsPerSlot) {
+      return NextResponse.json(
+        { error: 'Slot full' },
+        { status: 400 }
+      )
     }
 
     const reservation = await prisma.reservation.create({
       data: {
-        ...validated,
-        date: new Date(validated.date),
-        status: 'PENDING'
-      }
+        ...sanitized,
+        date: new Date(sanitized.date),
+        status: 'PENDING',
+      },
     })
 
-    // Send confirmation email (fire and forget)
-    sendReservationConfirmation(reservation).catch(console.error)
+    sendReservationConfirmation(reservation).catch((error) => {
+      logger.error('Reservation confirmation email failed', {
+        error,
+        reservationId: reservation.id,
+      })
+    })
 
     return NextResponse.json({ success: true, id: reservation.id })
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to book' }, { status: 500 })
+    logger.error('Failed to book reservation', { error })
+    return NextResponse.json(
+      { error: 'Failed to book' },
+      { status: 500 }
+    )
   }
 }

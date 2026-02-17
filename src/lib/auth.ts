@@ -1,9 +1,8 @@
 import { jwtVerify, SignJWT } from 'jose'
-
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-key-change-this-in-prod'
+import { env } from './env'
 
 export const getJwtSecretKey = () => {
-  const secret = JWT_SECRET
+  const secret = env.JWT_SECRET
   if (!secret || secret.length === 0) {
     throw new Error('The environment variable JWT_SECRET is not set.')
   }
