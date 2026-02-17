@@ -23,6 +23,18 @@ async function main() {
   })
   console.log(`Created user with id: ${admin.id}`)
 
+  const existingSettings = await prisma.settings.findFirst()
+  if (!existingSettings) {
+    const settings = await prisma.settings.create({
+      data: {
+        maxGuestsPerSlot: 40,
+        maxGuestsPerReservation: 10,
+        slotIntervalMinutes: 15,
+      },
+    })
+    console.log(`Created settings with id: ${settings.id}`)
+  }
+
   // Clear existing data to avoid duplicates and foreign key constraints
   await prisma.orderItem.deleteMany({})
   await prisma.order.deleteMany({})

@@ -6,6 +6,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 enum Role {
@@ -105,4 +106,13 @@ model Reservation {
   status    ReservationStatus @default(PENDING)
   createdAt DateTime          @default(now())
   updatedAt DateTime          @updatedAt
+}
+
+model Settings {
+  id                       String   @id @default(cuid())
+  maxGuestsPerSlot         Int      @default(40)
+  maxGuestsPerReservation  Int      @default(10)
+  slotIntervalMinutes      Int      @default(15)
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
 }

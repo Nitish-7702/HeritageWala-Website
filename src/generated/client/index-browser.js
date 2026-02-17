@@ -190,6 +190,15 @@ exports.Prisma.ReservationScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.SettingsScalarFieldEnum = {
+  id: 'id',
+  maxGuestsPerSlot: 'maxGuestsPerSlot',
+  maxGuestsPerReservation: 'maxGuestsPerReservation',
+  slotIntervalMinutes: 'slotIntervalMinutes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -230,7 +239,8 @@ exports.Prisma.ModelName = {
   MenuItem: 'MenuItem',
   Order: 'Order',
   OrderItem: 'OrderItem',
-  Reservation: 'Reservation'
+  Reservation: 'Reservation',
+  Settings: 'Settings'
 };
 
 /**
