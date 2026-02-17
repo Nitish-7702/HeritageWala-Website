@@ -1,12 +1,13 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useCart } from '@/context/CartContext'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Loader2, CheckCircle } from 'lucide-react'
+import { logger } from '@/lib/logger'
 
 const schema = z.object({
   name: z.string().min(2, 'Name is required'),
@@ -21,39 +22,89 @@ export default function CheckoutPage() {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [orderSuccess, setOrderSuccess] = useState<string | null>(null)
+  const [csrfToken, setCsrfToken] = useState<string | null>(null)
+  const hasStripe = !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema)
   })
 
+  useEffect(() => {
+    async function fetchCsrf() {
+      try {
+        const res = await fetch('/api/csrf')
+        if (res.ok) {
+          const data = await res.json()
+          setCsrfToken(data.token)
+        }
+      } catch {
+      }
+    }
+    fetchCsrf()
+  }, [])
+
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true)
     try {
-      const res = await fetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          customerName: data.name,
-          customerPhone: data.phone,
-          customerEmail: data.email,
-          items: items.map(item => ({
-            menuItemId: item.menuItemId,
-            quantity: item.quantity,
-            price: item.price,
-            name: item.name
-          }))
+      if (hasStripe) {
+        const res = await fetch('/api/checkout', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-csrf-token': csrfToken || '',
+          },
+          body: JSON.stringify({
+            customerName: data.name,
+            customerPhone: data.phone,
+            customerEmail: data.email,
+            items: items.map((item) => ({
+              menuItemId: item.menuItemId,
+              quantity: item.quantity,
+              price: item.price,
+              name: item.name,
+            })),
+          }),
         })
-      })
 
-      if (res.ok) {
-        const result = await res.json()
-        setOrderSuccess(result.orderId)
-        clearCart()
+        if (res.ok) {
+          const result = await res.json()
+          if (result.url) {
+            window.location.href = result.url
+            return
+          }
+        }
+
+        alert('Failed to start payment')
       } else {
-        alert('Failed to place order')
+        const res = await fetch('/api/orders', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-csrf-token': csrfToken || '',
+          },
+          body: JSON.stringify({
+            customerName: data.name,
+            customerPhone: data.phone,
+            customerEmail: data.email,
+            items: items.map((item) => ({
+              menuItemId: item.menuItemId,
+              quantity: item.quantity,
+              price: item.price,
+              name: item.name,
+            })),
+          }),
+        })
+
+        if (res.ok) {
+          const result = await res.json()
+          setOrderSuccess(result.orderId)
+          clearCart()
+        } else {
+          alert('Failed to place order')
+        }
       }
     } catch (e) {
-      console.error(e)
+      logger.error('Error placing order', { error: e })
       alert('Error placing order')
     } finally {
       setIsSubmitting(false)

@@ -15,6 +15,7 @@ import {
   ChefHat, 
   Package 
 } from 'lucide-react'
+import { logger } from '@/lib/logger'
 
 // Types based on Prisma schema
 type OrderStatus = 'PENDING' | 'PREPARING' | 'READY' | 'COMPLETED' | 'CANCELLED'
@@ -77,7 +78,7 @@ export default function OrdersTable() {
         setOrders(data)
       }
     } catch (error) {
-      console.error('Failed to fetch orders', error)
+      logger.error('Failed to fetch orders', { error })
     } finally {
       setLoading(false)
     }
@@ -100,7 +101,7 @@ export default function OrdersTable() {
         throw new Error('Failed to update status')
       }
     } catch (error) {
-      console.error('Error updating status:', error)
+      logger.error('Error updating order status', { error, orderId, newStatus })
       alert('Failed to update order status')
     }
   }

@@ -1,6 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
+import { logger } from '@/lib/logger'
 
 export interface CartItem {
   menuItemId: string
@@ -36,7 +37,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       try {
         setItems(JSON.parse(savedCart))
       } catch (e) {
-        console.error('Failed to parse cart', e)
+        logger.error('Failed to parse cart', { error: e })
       }
     }
   }, [])

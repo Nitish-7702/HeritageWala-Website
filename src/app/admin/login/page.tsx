@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Lock, Mail, ArrowRight } from 'lucide-react'
@@ -13,6 +13,21 @@ export default function AdminLogin() {
     email: '',
     password: ''
   })
+  const [csrfToken, setCsrfToken] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function fetchCsrf() {
+      try {
+        const res = await fetch('/api/csrf')
+        if (res.ok) {
+          const data = await res.json()
+          setCsrfToken(data.token)
+        }
+      } catch {
+      }
+    }
+    fetchCsrf()
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -23,7 +38,8 @@ export default function AdminLogin() {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'x-csrf-token': csrfToken || ''
         },
         body: JSON.stringify(formData)
       })

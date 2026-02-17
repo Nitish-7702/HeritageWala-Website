@@ -7,6 +7,7 @@ import { Footer } from "@/components/layout/Footer";
 import { CartDrawer } from "@/components/features/CartDrawer";
 import FloatingOrderButton from "@/components/features/FloatingOrderButton";
 import ModernBackground from "@/components/layout/ModernBackground";
+import { env } from "@/lib/env";
 
 const lato = Lato({
   variable: "--font-lato",
@@ -22,7 +23,25 @@ const playfair = Playfair_Display({
 
 export const metadata: Metadata = {
   title: "Heritage Wala | Premium Hyderabad Cuisine",
-  description: "Experience the authentic flavors of Hyderabad in a premium, modern setting.",
+  description:
+    "Experience the authentic flavors of Hyderabad in a premium, modern setting.",
+  metadataBase: env.NEXT_PUBLIC_APP_URL
+    ? new URL(env.NEXT_PUBLIC_APP_URL)
+    : undefined,
+  openGraph: {
+    title: "Heritage Wala | Premium Hyderabad Cuisine",
+    description:
+      "Authentic Hyderabadi flavors, premium ambience, and a royal dining experience.",
+    url: env.NEXT_PUBLIC_APP_URL,
+    siteName: "Heritage Wala",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Heritage Wala | Premium Hyderabad Cuisine",
+    description:
+      "Authentic Hyderabadi flavors, premium ambience, and a royal dining experience.",
+  },
 };
 
 export default function RootLayout({

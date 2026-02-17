@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -21,17 +21,35 @@ type FormData = z.infer<typeof schema>
 export default function ReservationsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
+  const [csrfToken, setCsrfToken] = useState<string | null>(null)
 
   const { register, handleSubmit, formState: { errors } } = useForm({
     resolver: zodResolver(schema)
   })
+
+  useEffect(() => {
+    async function fetchCsrf() {
+      try {
+        const res = await fetch('/api/csrf')
+        if (res.ok) {
+          const data = await res.json()
+          setCsrfToken(data.token)
+        }
+      } catch {
+      }
+    }
+    fetchCsrf()
+  }, [])
 
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true)
     try {
       const res = await fetch('/api/reservations', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-csrf-token': csrfToken || '',
+        },
         body: JSON.stringify(data)
       })
 

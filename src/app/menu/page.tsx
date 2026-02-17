@@ -6,6 +6,7 @@ import { Plus, Loader2 } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
 import Image from 'next/image'
 import clsx from 'clsx'
+import { logger } from '@/lib/logger'
 
 interface MenuItem {
   id: string
@@ -40,7 +41,7 @@ export default function MenuPage() {
           if (data.length > 0) setActiveCategory(data[0].id)
         }
       } catch (error) {
-        console.error('Failed to load menu', error)
+        logger.error('Failed to load menu', { error })
       } finally {
         setLoading(false)
       }

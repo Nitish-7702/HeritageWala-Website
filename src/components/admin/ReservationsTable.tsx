@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Check, X, Calendar } from 'lucide-react'
+import { logger } from '@/lib/logger'
 
 type Reservation = {
   id: string
@@ -30,7 +31,7 @@ export default function ReservationsTable({ reservations }: { reservations: Rese
       })
       router.refresh()
     } catch (error) {
-      console.error('Failed to update status', error)
+      logger.error('Failed to update reservation status', { error, id, status })
     } finally {
       setLoading(null)
     }

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Plus, Pencil, Trash2, X, Save } from 'lucide-react'
 import Image from 'next/image'
+import { logger } from '@/lib/logger'
 
 type Category = {
   id: string
@@ -74,7 +75,7 @@ export default function MenuTable({ items, categories }: { items: MenuItem[], ca
       await fetch(`/api/admin/menu/${id}`, { method: 'DELETE' })
       router.refresh()
     } catch (error) {
-      console.error('Failed to delete', error)
+      logger.error('Failed to delete menu item', { error, id })
     } finally {
       setLoading(false)
     }
@@ -100,7 +101,7 @@ export default function MenuTable({ items, categories }: { items: MenuItem[], ca
       resetForm()
       router.refresh()
     } catch (error) {
-      console.error('Failed to save', error)
+      logger.error('Failed to save menu item', { error, formData, isEditing, isAdding })
     } finally {
       setLoading(false)
     }
